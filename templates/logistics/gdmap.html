@@ -1,0 +1,169 @@
+{% extends 'base1.html' %}
+{% load staticfiles %}
+{% block head%}
+    <script type="text/javascript" src='https://webapi.amap.com/maps?v=1.4.15&key=cc7845bdc0366611c27b116880efa9d5'></script>
+    <style>
+    #container {
+        width: auto;
+        height: 500px;
+    }
+    #panel {
+        {#position: fixed;#}
+        {#background-color: white;#}
+        {#max-height: 90%;#}
+        {#overflow-y: auto;#}
+        {#top: 10px;#}
+        {#right: 10px;#}
+        {#width: 280px;#}
+        display: none;
+    }
+    #panel .amap-lib-driving {
+   	    border-radius: 4px;
+        overflow: hidden;
+    }
+    </style>
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <script src="https://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+{% endblock %}
+{% block body %}
+<body>
+	<div class="header_con">
+		<div class="header">
+			<div class="welcome fl">欢迎来到天天生鲜!</div>
+			<div class="fr">
+				<div class="login_btn fl">
+                    {% if username %}
+                        欢迎您：<em>{{ username }}</em>
+                        <div class="user_link fl">
+
+					        <a href="{% url 'user_info' %}">用户中心</a>
+					        <span>|</span>
+{#					        <a href="{% url 'user_cart' %}">我的购物车</a>#}
+{#					        <span>|</span>#}
+					        <a href="{% url 'user_order' %}">我的订单</a>
+                            <span>|</span>
+				        </div>
+                    {% else %}
+					    <a href="{% url 'login' %}">登录</a>
+					    <span>|</span>
+					    <a href="{% url 'register' %}">注册</a>
+                    {% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="search_bar clearfix">
+		<a href="index.html" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
+		<div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;物流查询</div>
+		<div class="search_con fr">
+            <form action="{% url 'gdmap' %}" method="get">
+			    <input type="text" class="input_text fl" name="ordernum" placeholder="搜索物流订单">
+                <button type="submit" class="input_btn fr">搜索</button>
+            </form>
+		</div>
+	</div>
+
+	<div class="main_con clearfix">
+		<div class="left_menu_con clearfix">
+			<h3>用户中心</h3>
+			<ul>
+				<li><a href="{% url 'gdmap' %}" class="active">订单查询</a></li>
+			</ul>
+		</div>
+        <div class="right_content clearfix">
+        <table class="table">
+{#            <caption>物流追踪</caption>#}
+            <thead>
+                <tr>
+                    <th>标识</th>
+                    <th>地点</th>
+                    <th>坐标</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="active">
+                    <td>起始地</td>
+                    <td><span class="label label-info">{{ startpoint }}</span></td>
+                    <td></td>
+                </tr>
+                <tr class="success">
+                    <td>当前所在地</td>
+                    <td><span class="label label-danger">{{ nowstation }}</span></td>
+                    <td><span class="label label-danger" id="v1"></span></td>
+                </tr>
+                <tr class="warning">
+                    <td>目的地</td>
+                    <td><span class="label label-info">{{ destination }}</span></td>
+                    <td><span class="label label-info" id="v2"></span></td>
+                </tr>
+                <h5>距离:<span class="label label-info" id="v3"></span></h5>
+                <h5>预计还有<span class="label label-warning" id="v4"></span>天内到达</h5>
+            </tbody>
+        </table>
+            <div class="info_con clearfix" id="container"></div>
+            <div id="panel"></div>
+		</div>
+	</div>
+
+</div>
+<script type="text/javascript">
+    var map = new AMap.Map("container", {
+        zoom:11,
+        resizeEnable: true,
+        center:[116.397428, 39.90923],
+        viewMode:'3D',
+    });
+    map.plugin('AMap.Geocoder',function () {
+        var geocoder = new AMap.Geocoder({
+            city: "010",
+        });
+        var v1,v2;
+        geocoder.getLocation('{{ nowstation }}', function(status, result) {
+            if (status === 'complete' && result.info === 'OK') {
+                v1 = result.geocodes[0].location;
+                document.getElementById('v1').innerHTML = v1;
+                geocoder.getLocation('{{ destination }}', function(status, result) {
+                    if (status === 'complete' && result.info === 'OK') {
+                        v2 = result.geocodes[0].location;
+                        document.getElementById('v2').innerHTML = v2;
+                        var dis = AMap.GeometryUtil.distance(v1, v2);
+                        document.getElementById('v3').innerHTML = dis;
+                        var day=Math.floor(dis/12000);
+                        document.getElementById('v4').innerHTML = day+1;
+                    }
+                });
+            }
+        });
+    });
+    var truckOptions = {
+            map: map,
+            policy:0,
+            size:1,
+            city:'beijing',
+            panel:'panel'
+    };
+    map.plugin('AMap.TruckDriving',function () {
+        var driving = new AMap.TruckDriving(truckOptions);
+        {% if got == True %}
+        var path = [
+            {keyword:'{{ startpoint }}',city:'010'},//起点
+            {% if startpoint != nowstation and nowstation != destination%}
+                {keyword:'{{ nowstation }}',city:'010'},
+            {% endif %}
+            {keyword:'{{ destination }}',city:'010'}//终点
+        ];
+            {% elif got == False %}
+            log.error('无路由信息');
+        {% endif %}
+        driving.search(path, function(status) {
+        if (status === 'complete') {
+            log.success('加载完成')
+        }
+        });
+    });
+</script>
+</body>
+</html>
+{% endblock %}

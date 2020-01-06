@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>天天生鲜-购物车</title>
+	<link rel="stylesheet" type="text/css" href="/static/css/reset.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/main.css">
+    <script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript">
+        function add() {
+            num = parseFloat($('.num_show').val());
+            $('.num_show').val(num+1);
+            $('.num_show').blur();
+        }
+        function minus() {
+            num = parseFloat($('.num_show').val());
+            $('.num_show').val(num-1);
+            $('.num_show').blur();
+        }
+        $(function () {
+            $('.num_show').blur(function () {
+                num = parseFloat($('.num_show').val());
+                price = parseFloat($('#gprice').text());
+                total = num*price;
+                $('#gtotal').text(total.toFixed(2));
+            });
+        })
+        function delete_cart(gid){
+            {#alert(gid);#}
+            $.ajax({
+                url:'/cart/delete_cart',
+                data:{'gid':gid},
+                contentType:'application/json;charset=UTF-8',
+                type:'GET',
+                success:function () {
+                    //删除相应商品的表格
+                    var code=document.getElementById(gid);
+                    code.parentNode.removeChild();
+                },
+                error:function(){
+                    alter("删除购物车失败")
+                }
+            })
+        }
+
+    </script>
+</head>
+<body>
+	<div class="header_con">
+		<div class="header">
+			<div class="welcome fl">欢迎来到天天生鲜!</div>
+			<div class="fr">
+				<div class="login_btn fl">
+                    {% if username %}
+                        欢迎您：<em>{{ username }}</em>
+                        <div class="user_link fl">
+					        <a href="{% url 'user_info' %}">用户中心</a>
+					        <span>|</span>
+					        <a href="{% url 'user_cart' %}">我的购物车</a>
+					        <span>|</span>
+					        <a href="{% url 'user_order' %}">我的订单</a>
+                            <span>|</span>
+				        </div>
+                    {% else %}
+					    <a href="{% url 'login' %}">登录</a>
+					    <span>|</span>
+					    <a href="{% url 'register' %}">注册</a>
+                    {% endif %}
+				</div>
+
+			</div>
+		</div>		
+	</div>
+
+	<div class="search_bar clearfix">
+		<a href="../goods/index.html" class="logo fl"><img src="/static/images/logo.png"></a>
+		<div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;购物车</div>
+		<div class="search_con fr">
+			<input type="text" class="input_text fl" name="" placeholder="搜索商品">
+			<input type="button" class="input_btn fr" name="" value="搜索">
+		</div>		
+	</div>
+
+
+	<ul class="cart_list_th clearfix">
+		<li class="col01">商品名称</li>
+		<li class="col02">商品单位</li>
+		<li class="col03">商品价格</li>
+		<li class="col04">数量</li>
+		<li class="col05" >小计</li>
+		<li class="col06">操作</li>
+	</ul>
+    {% for g in goodslist %}
+	<ul class="cart_list_td clearfix" id="{{ g.id }}">
+		<li class="col01"><input type="checkbox" name="" checked></li>
+		<li class="col02"><img src="/static/images/{{ g.gpic }}"></li>
+		<li class="col03">{{ g.gtitle }}<br></li>
+		<li class="col04">{{ g.gunit }}</li>
+		<li class="col05">{{ g.gprice }}</li>
+		<li class="col06">
+			<div class="num_add">
+				<a href="javascript:add();" class="add fl">+</a>
+				<input type="text" class="num_show fl" value="1">	
+				<a href="javascript:minus();" class="minus fl">-</a>
+			</div>
+		</li>
+		<li class="col07"></li>
+		<li class="col08" ><a href="javascript:delete_cart({{ g.id }});">删除</a></li>
+	</ul>
+    {% endfor %}
+
+	
+
+	<ul class="settlements">
+		<li class="col01"><input type="checkbox" name="" checked=""></li>
+		<li class="col02">全选</li>
+		<li class="col03">合计(不含运费)：<span>¥</span><em id="total"></em></li>
+		<li class="col04"><a href="#">去结算</a></li>
+	</ul>
+
+	<div class="footer">
+		<div class="foot_link">
+			<a href="#">关于我们</a>
+			<span>|</span>
+			<a href="#">联系我们</a>
+			<span>|</span>
+			<a href="#">招聘人才</a>
+			<span>|</span>
+			<a href="#">友情链接</a>		
+		</div>
+		<p>CopyRight © 2016 北京天天生鲜信息技术有限公司 All Rights Reserved</p>
+		<p>电话：010-****888    京ICP备*******8号</p>
+	</div>
+	
+</body>
+</html>

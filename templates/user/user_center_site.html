@@ -1,0 +1,89 @@
+{% extends 'base1.html' %}
+{% load staticfiles %}
+{% block head%}
+{% endblock %}
+{% block body %}
+	<div class="header_con">
+		<div class="header">
+			<div class="welcome fl">欢迎来到天天生鲜!</div>
+			<div class="fr">
+				<div class="login_btn fl">
+                    {% if username %}
+                        欢迎您：<em>{{ username }}</em>
+                        <div class="user_link fl">
+
+					        <a href="{% url 'user_info' %}">用户中心</a>
+					        <span>|</span>
+{#					        <a href="{% url 'user_cart' %}">我的购物车</a>#}
+{#					        <span>|</span>#}
+					        <a href="{% url 'user_order' %}">我的订单</a>
+                            <span>|</span>
+				        </div>
+                    {% else %}
+					    <a href="{% url 'login' %}">登录</a>
+					    <span>|</span>
+					    <a href="{% url 'register' %}">注册</a>
+                    {% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="search_bar clearfix">
+		<a href="index.html" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
+		<div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;用户中心</div>
+		<div class="search_con fr">
+			<form method="get" action="{% url 'search' %}" >
+            {% csrf_token %}
+                <input type="text" class="input_text fl" name="search" placeholder="搜索" >
+                <button type="submit" class="input_btn fr">搜索</button>
+            </form>
+		</div>
+	</div>
+
+	<div class="main_con clearfix">
+		<div class="left_menu_con clearfix">
+			<h3>用户中心</h3>
+			<ul>
+				<li><a href="{% url 'user_info' %}">· 个人信息</a></li>
+				<li><a href="{% url 'user_order' %}">· 全部订单</a></li>
+				<li><a href="{% url 'user_site' %}" class="active" >· 收货地址</a></li>
+			</ul>
+		</div>
+		<div class="right_content clearfix">
+				<h3 class="common_title2">收货地址</h3>
+				<div class="site_con">
+					<dl>
+						<dt>当前地址：</dt>
+						<dd>{{ user.uaddress }}（{{ user.ureceiver }} 收） {{ user.uphone }}</dd>
+					</dl>
+                    <a href="{% url 'gdmap' %}"><button class="button">查看物流</button></a>
+				</div>
+				<h3 class="common_title2">编辑地址</h3>
+				<div class="site_con">
+					<form action="/user/site/" method="post">
+                        {% csrf_token %}
+						<div class="form_group">
+							<label>收件人：</label>
+							<input type="text" name="ureceiver" value="{{ user.ureceiver }}">
+						</div>
+						<div class="form_group form_group2">
+							<label>详细地址：</label>
+							<textarea class="site_area" name="uaddress" placeholder="{{ user.uaddress }}"></textarea>
+						</div>
+						<div class="form_group">
+							<label>邮编：</label>
+							<input type="text" name="uzipcode" value="{{ user.uzipcode }}">
+						</div>
+						<div class="form_group">
+							<label>手机：</label>
+							<input type="text" name="uphone" value="{{ user.uphone }}">
+						</div>
+
+						<input type="submit" name="" value="提交" class="info_submit">
+					</form>
+				</div>
+		</div>
+	</div>
+
+{% endblock %}
